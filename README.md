@@ -1,4 +1,4 @@
-### README: Deep Q-Learning for Lunar Lander
+### Deep Q-Learning for Lunar Lander
 
 ---
 

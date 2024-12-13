@@ -1,176 +1,114 @@
-### Deep Q-Learning for Lunar Lander
+# Deep Q-Learning for Lunar Landing
+
+This project implements a Deep Q-Learning algorithm to train an agent to successfully land a spacecraft in the **Lunar Lander** environment provided by OpenAI Gym. The implementation utilizes **PyTorch** for neural network construction and training.
 
 ---
 
-## **Project Overview**
+## Requirements
 
-This repository implements a **Deep Q-Learning (DQL)** algorithm to solve the **Lunar Lander** environment from OpenAI Gym. The goal is to control a lunar lander and safely land it on the moon's surface by learning an optimal policy. The agent interacts with the environment and learns from its experiences using neural networks to approximate Q-values.
+Before running the code, ensure you have the following libraries installed:
 
----
+- Python 3.7+
+- PyTorch
+- NumPy
+- OpenAI Gym (with `gymnasium[box2d]`)
+- Swig (for environment dependencies)
 
-## **Environment: Lunar Lander**
+### Installation
 
-### **Environment Description**
-
-- **Objective**: Safely land the lunar module on the landing pad.
-- **State Space**:
-
-  - An 8-dimensional vector representing the lander's state:
-    1. X and Y positions.
-    2. X and Y velocities.
-    3. Angle of the lander.
-    4. Angular velocity.
-    5. Boolean values indicating whether the left or right leg is in contact with the ground.
-
-- **Action Space**:
-
-  - 4 discrete actions:
-    1. Do nothing.
-    2. Fire the left orientation engine.
-    3. Fire the main engine.
-    4. Fire the right orientation engine.
-
-- **Reward**:
-
-  - Positive rewards for landing on the pad.
-  - Negative rewards for crashing or moving further away.
-  - Small penalty for using fuel to encourage efficiency.
-
-- **Episode Termination**:
-  - The agent crashes or lands successfully.
-
-### **Solved Criteria**
-
-- The environment is considered solved when the average score over 100 episodes is **≥ 200**.
-
----
-
-## **Deep Q-Learning Algorithm**
-
-### **Key Components**
-
-1. **Q-Learning**:
-
-   - An off-policy reinforcement learning algorithm that estimates the Q-value function to learn optimal action policies.
-   - Uses the Bellman Equation:  
-     \[
-     Q(s, a) = r + \gamma \max_a Q(s', a)
-     \]
-     where \( \gamma \) is the discount factor.
-
-2. **Deep Q-Network (DQN)**:
-
-   - A neural network is used to approximate Q-values for each state-action pair.
-   - Architecture:
-     - Input layer: State vector (8 dimensions).
-     - Hidden layers: Two layers with 64 neurons each and ReLU activation.
-     - Output layer: Q-values for the 4 actions.
-
-3. **Experience Replay**:
-
-   - Stores past experiences \((s, a, r, s')\) in a replay buffer.
-   - Randomly samples mini-batches from the buffer to break correlations and improve stability.
-
-4. **Target Network**:
-
-   - A separate network is used to compute target Q-values, updated periodically to stabilize training.
-
-5. **Epsilon-Greedy Policy**:
-   - Balances exploration and exploitation:
-     - With probability \(\epsilon\): Choose a random action.
-     - With probability \(1-\epsilon\): Choose the action with the highest Q-value.
-
----
-
-## **Implementation Steps**
-
-1. **Setup Environment**:
-
-   - Initialize the Lunar Lander environment from OpenAI Gym.
-
-2. **Initialize Networks**:
-
-   - Create a Q-network and a target network with the same architecture.
-
-3. **Training Loop**:
-
-   - Reset the environment at the start of each episode.
-   - Use the epsilon-greedy policy to select actions.
-   - Store experiences in the replay buffer.
-   - Sample mini-batches from the buffer to train the Q-network.
-   - Periodically update the target network.
-
-4. **Termination Criteria**:
-   - Stop training when the average score over 100 episodes is ≥ 200.
-
----
-
-## **Dependencies**
-
-Install the following packages:
+Install the required libraries using the following commands:
 
 ```bash
-pip install numpy tensorflow gym matplotlib
+pip install torch numpy gymnasium
+pip install "gymnasium[box2d]" "gymnasium[atari, accept-rom-license]"
+apt-get install -y swig
 ```
 
 ---
 
-## **Usage**
+## Files and Components
 
-1. Clone the repository:
+### 1. **Network Architecture**
 
-   ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
+- The `Network` class defines a neural network with three fully connected layers:
+  - Input layer size: `state_size` (environment observation space)
+  - Two hidden layers with 64 neurons each
+  - Output layer size: `action_size` (number of possible actions)
 
-2. Train the agent:
+### 2. **Experience Replay**
 
-   ```bash
-   python train.py
-   ```
+- Implemented through the `ReplayMemory` class:
+  - Stores past experiences (state, action, reward, next state, done flag) up to a specified capacity.
+  - Enables random sampling of experiences for training to break correlation in observation sequences.
 
-3. Test the trained agent:
+### 3. **Deep Q-Network (DQN) Agent**
 
-   ```bash
-   python test.py
-   ```
-
-4. Visualize training progress:
-
-   - Training rewards will be plotted after the script completes.
+- The `Agent` class handles:
+  - Interaction with the environment
+  - Training using Q-learning
+  - Action selection via an epsilon-greedy policy
+  - Soft updates for the target Q-network to stabilize learning
 
 ---
 
-## **Results**
+## Key Hyperparameters
 
-- **Average Score**: The agent consistently achieves an average score of **≥ 200** over 100 episodes.
-- **Training Time**: Depends on hardware but typically requires a few thousand episodes.
-
----
-
-## **Future Improvements**
-
-1. **Double DQN**:
-   - Mitigate overestimation of Q-values by decoupling action selection and evaluation.
-2. **Dueling DQN**:
-
-   - Separate state-value estimation and action-advantage estimation for better performance.
-
-3. **Prioritized Experience Replay**:
-   - Sample experiences based on their importance (i.e., TD error).
+- **Learning Rate**: `5e-4`
+- **Batch Size**: `100`
+- **Discount Factor (γ)**: `0.99`
+- **Replay Buffer Size**: `1e5`
+- **Interpolation Parameter (τ)**: `1e-3`
+- **Epsilon Decay**: `0.995`
 
 ---
 
-## **Acknowledgments**
+## Training Process
 
-This project was inspired by:
+### Steps
 
-- OpenAI Gym for providing the Lunar Lander environment.
-- Deep reinforcement learning papers and tutorials.
+1. Initialize the environment (`LunarLander-v3`) and the DQN agent.
+2. Train the agent over a specified number of episodes.
+3. Update the agent's policy using sampled experiences from the replay buffer.
+4. Evaluate performance based on average scores over the last 100 episodes.
+
+### Key Metrics
+
+- Success is defined as achieving an average score of `200` over 100 consecutive episodes.
 
 ---
 
-## **License**
+## Usage
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+### Run the Code
+
+Execute the script to train the agent in the Lunar Lander environment. Progress will be printed as:
+
+```plaintext
+Episode X    Average Score: Y
+```
+
+### Termination
+
+The training stops if:
+
+1. The maximum number of episodes (`2000`) is reached.
+2. The environment is solved (average score ≥ `200`).
+
+---
+
+## Results
+
+After successful training:
+
+- The trained agent can land the spacecraft with optimal precision.
+- Model weights and training scores can be saved for evaluation or further analysis.
+
+---
+
+## Improvements and Extensions
+
+- **Optimization**: Experiment with different architectures and hyperparameters.
+- **Evaluation**: Add visualization to assess the agent's performance in the environment.
+- **Transfer Learning**: Apply the trained model to similar environments.
+
+Feel free to explore and extend the implementation!
